@@ -1,7 +1,9 @@
 name: fight-pandemics
 
 on:
-  push:
+  create:
+    tags:
+      - feature-*
     branches-ignore:
       - 'master'
 
