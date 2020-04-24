@@ -39,13 +39,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_images
     steps:
-      - uses: actions/checkout@v2
-      - id: get-branch-name
-        uses: ypicard/get-branch-name-github-action@v1
-      - id: get-branch-name-sanitized
-        name: Sanitize branch name
+      - id: get-subdomain-name
+        name: Get subdomain name
         shell: bash
-        run: echo "::set-output name=branch::$(echo ${{ steps.get-branch-name.outputs.branch }} | sed 's/\//-/g')"
+        run: echo "::set-output name=subdomain::$(echo ${GITHUB_REF} | sed 's/\//-/g')"
       - env:
           AUTH_SECRET_KEY: ${{ secrets.AUTH_SECRET_KEY }}
           AUTH_CLIENT_ID: ${{ secrets.AUTH_CLIENT_ID }}
@@ -53,20 +50,19 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.REVIEW_AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.REVIEW_AWS_SECRET_ACCESS_KEY }}
         run: |
-          export BRANCH_NAME=${{ steps.get-branch-name-sanitized.outputs.branch }}
           cat << EOF > main.tf
           terraform {
             backend "s3" {
               bucket = "fp-review-terraform-state"
               region = "us-east-1"
-              key = "${BRANCH_NAME}.tfstate"
+              key = "${{ steps.get-subdomain-name.outputs.subdomain }}.tfstate"
             }
           }
           module "main" {
             source = "github.com/FightPandemics/tf-fargate-task//module"
-            image_tag = "${BRANCH_NAME}"
+            image_tag = "${{ steps.get-subdomain-name.outputs.subdomain }}"
             fp_context = "review"
-            subdomain = "${BRANCH_NAME}"
+            subdomain = "${{ steps.get-subdomain-name.outputs.subdomain }}"
             backend_env_variables = [
               {
                 name = "PORT"
@@ -111,7 +107,7 @@ jobs:
           region: us-east-1
       - uses: ItsKarma/aws-cli@v1.70.0
         with:
-          args: ecs update-service --cluster review-cluster --service ${{ steps.get-branch-name-sanitized.outputs.branch }} --force-new-deployment
+          args: ecs update-service --cluster review-cluster --service ${{ steps.get-subdomain-name.outputs.subdomain }} --force-new-deployment
         env:
           AWS_DEFAULT_REGION: us-east-1
           AWS_ACCESS_KEY_ID: ${{ secrets.REVIEW_AWS_ACCESS_KEY_ID }}
