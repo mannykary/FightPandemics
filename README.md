@@ -90,4 +90,6 @@ successfully completes, you can access your built app at `<branch_name>.fightpan
 the *sanitized* branch name of your feature branch (i.e. if the branch name has a `/` in it, it will be converted to a
 `-`, e.g. `feature/hot-potato` will be converted to `feature-hot-potato`).
 
+When a pull request is closed, the build will automatically be destroyed.
+
 _Coming soon: deployment to staging, and production._
