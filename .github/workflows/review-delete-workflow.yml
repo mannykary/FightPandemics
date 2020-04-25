@@ -5,6 +5,9 @@ on:
     types: [closed]
     branches-ignore:
       - 'master'
+  delete:
+    branches-ignore:
+      - 'master'
 
 jobs:
   destroy_review:
